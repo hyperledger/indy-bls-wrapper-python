@@ -2,25 +2,25 @@ FROM ubuntu:18.04
 
 
 RUN apt-get update -y && apt-get install -y \
-	  wget \
-	  python3.5 \
-	  python3-pip \
-	  python-setuptools \
-	  python3-nacl \
-	  apt-transport-https \
-	  ca-certificates \
-	  supervisor \
-	  curl \
-      sudo \
-      nano \
-      git \
-      cmake \
-      autoconf \
-      libtool \
-      pkg-config \
-      libssl-dev
+	wget \
+	python3.5 \
+	python3-pip \
+	python-setuptools \
+	python3-nacl \
+	apt-transport-https \
+	ca-certificates \
+	supervisor \
+	curl \
+	sudo \
+	nano \
+	git \
+	cmake \
+	autoconf \
+	libtool \
+      	pkg-config \
+      	libssl-dev
 
-ENV RUST_VERSION=${RUST_VERSION:-1.34.0}
+ENV RUST_VERSION=${RUST_VERSION:-1.36.0}
 
 ENV RUSTUP_HOME=/usr/local/rustup \
     CARGO_HOME=/usr/local/cargo \
