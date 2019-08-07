@@ -2,7 +2,7 @@
 from setuptools import setup
 
 setup(
-    name='ursa',
+    name='ursacl',
     version='0.1.0',
     url='https://github.com/cam-parra/python-ursa',
     description='python wrapper for ursa universal crypto library',

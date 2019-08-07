@@ -17,8 +17,8 @@ RUN apt-get update -y && apt-get install -y \
 	cmake \
 	autoconf \
 	libtool \
-      	pkg-config \
-      	libssl-dev
+    pkg-config \
+    libssl-dev
 
 ENV RUST_VERSION=${RUST_VERSION:-1.36.0}
 
@@ -34,14 +34,13 @@ RUN curl https://sh.rustup.rs -sSf | sh -s -- -y --no-modify-path --default-tool
 
 WORKDIR /home/
 
-RUN curl -fsSL https://github.com/jedisct1/libsodium/releases/download/1.0.14/libsodium-1.0.14.tar.gz | tar -xz
+RUN curl -fsSL https://github.com/jedisct1/libsodium/releases/download/1.0.17/libsodium-1.0.17.tar.gz | tar -xz
 
-WORKDIR libsodium-1.0.14
+WORKDIR libsodium-1.0.17
 
 RUN ./autogen.sh && ./configure && make && sudo make install
 
-ENV SODIUM_LIB_DIR=/usr/local/lib \
-    LD_LIBRARY_PATH=/usr/local/lib
+ENV LD_LIBRARY_PATH=/usr/local/lib
 
 WORKDIR /home/
 
