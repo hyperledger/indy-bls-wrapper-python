@@ -13,4 +13,4 @@ jobs:
       - uses: actions/checkout@v3
       - name: install
         run: python -m pip install .
-      - uses: trailofbits/gh-action-pip-audit@v0.0.4
+      - uses: pypa/gh-action-pip-audit@v1.0.0
