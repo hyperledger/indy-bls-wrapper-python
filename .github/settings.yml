@@ -3,8 +3,6 @@
 #
 
 repository:
-  name: ursa-python
-  description: Hyperledger Ursa has moved to end-of-life status.
-  homepage: https://wiki.hyperledger.org/display/ursa
+  name: indy-bls-wrapper-python
   default_branch: main
-  archived: true
+  archived: false
