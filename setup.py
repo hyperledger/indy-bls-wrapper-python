@@ -5,7 +5,7 @@ with open(os.path.abspath("./README.md"), "r") as fh:
     long_description = fh.read()
 
 setup(
-    name='python-indy-bls',
+    name='indy-bls',
     version='0.1.1',
     long_description=long_description,
     long_description_content_type="text/markdown",
