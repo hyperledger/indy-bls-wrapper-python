@@ -1,1 +1,1 @@
-from ursa.indy_error import ErrorCode
+from indy_error import ErrorCode
