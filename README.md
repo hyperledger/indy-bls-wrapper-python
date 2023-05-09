@@ -1,17 +1,16 @@
-# ursa-python-wrapper
+# indy-bls-wrapper-python
 
-[Hyperledger Ursa was moved to EOL at the TOC meeting on 27 APR 2023.](https://toc.hyperledger.org/meeting-minutes/2023/2023-04-27-TOC-meeting-record.html)
+Python wrapper for the [Hyperledger Indy BLS Signature Rust implementation].
 
-Python wrapper for URSA crypto library
+[Hyperledger Indy BLS Signature Rust implementation]: https://github.com/hyperledger/indy-blssignatures-rs
 
-## Dependencies 
+## Dependencies
 
-Same as parent project [URSA](https://github.com/hyperledger/ursa/blob/master/docs/build-environment.md)
+Same as parent project, [Hyperledger Indy BLS Signature Rust implementation].
 
+## Supports Python3.*
 
-### Supports Python3.*
-
-# Current Implementations 
+## Current Implementations
 
 * BLS signatures 
 
