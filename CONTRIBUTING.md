@@ -29,7 +29,7 @@ guidelines:
 
 ### Rebase
 
-Use `git rebase origin/master` to limit creating merge commits
+Use `git rebase origin/main` to limit creating merge commits
 
 ### Signed-off-by
 
