@@ -26,7 +26,7 @@ Maintainers are assigned the following scopes in this repository:
 | Ian Costanzo      | ianco              | Maintainer        |      |            |       |                     |
 | Nathan George     | nage               | Admin             |      |            |       |                     |
 | Stephen Curran    | swcurran           | Admin             |      |            |       |                     |
-| Timo Glastro      | TimoGlastro        | Maintainer        |      |            |       |                     |
+| Timo Glastra      | TimoGlastra        | Maintainer        |      |            |       |                     |
 | Wade Barnes       | WadeBarnes         | Admin, Maintainer |      |            |       |                     |
 
 ## Emeritus Maintainers
