@@ -110,7 +110,6 @@ jobs:
         run: |
           pip install pytest dist/*
           python -m pytest --log-cli-level=DEBUG
-        working-directory: wrappers/python
         env:
           no_proxy: "*" # python issue 30385
           RUST_BACKTRACE: full
@@ -118,7 +117,7 @@ jobs:
       - if: ${{ runner.os == 'Linux' }}
         name: Audit wheel
         run: |
-          auditwheel show wrappers/python/dist/* | tee auditwheel.log
+          auditwheel show dist/* | tee auditwheel.log
           grep -q manylinux_2_17_ auditwheel.log
 
       - name: Upload artifacts
