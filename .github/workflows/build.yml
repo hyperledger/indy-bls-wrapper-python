@@ -105,7 +105,7 @@ jobs:
       - name: Run tests
         # FIXME cross platform test the python package
         # maybe use the cross docker image?
-        if: ${{ matrix.architecture != 'linux-aarch64' }}
+        if: ${{ !matrix.use_cross }}
         shell: sh
         run: |
           pip install pytest dist/*

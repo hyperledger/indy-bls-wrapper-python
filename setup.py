@@ -20,5 +20,14 @@ setup(
     author="Andrew Whitehead, Berend Sliedrecht, Stephen Curran",
     author_email="cywolf@gmail.com, berend@animo.id, swcurran@cloudcompass.ca",
     packages=["indy_bls"],
+    include_package_data=True,
+    package_data={
+        "": [
+            "indy_blssignatures.dll",
+            "libindy_blssignatures.dylib",
+            "libindy_blssignatures.so",
+        ]
+    },
+    python_requires=">=3.6.3",
     tests_require=["pytest"],
 )
