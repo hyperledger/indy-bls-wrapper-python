@@ -2,7 +2,8 @@
 
 import logging
 
-from ctypes import POINTER, c_void_p, byref, c_size_t, c_ubyte, c_bool
+from ctypes import POINTER, byref, c_bool, c_char_p, c_int32, c_int64, c_ubyte, c_void_p
+from typing import Optional
 from weakref import finalize
 
 from .lib import do_call
@@ -56,7 +57,7 @@ class BlsEntity:
         LOGGER.debug("BlsEntity.as_bytes: >>> self: %r", self)
 
         xbytes = POINTER(c_ubyte)()
-        xbytes_len = c_size_t()
+        xbytes_len = c_int32()
 
         do_call(
             self.as_bytes_handler, self.c_instance, byref(xbytes), byref(xbytes_len)
@@ -103,7 +104,7 @@ class SignKey(BlsEntity):
     free_handler = "indy_bls_sign_key_free"
 
     @classmethod
-    def new(cls, seed):
+    def new(cls, seed: Optional[bytes] = None):
         """
         Create and return a random (or seeded from seed) BLS sign key.
 
@@ -111,12 +112,14 @@ class SignKey(BlsEntity):
         :return: BLS sign key
         """
         LOGGER.debug("SignKey::new: >>>")
+        if seed and not isinstance(seed, bytes):
+            raise ValueError("seed must be a bytes instance")
 
         c_instance = c_void_p()
         do_call(
             cls.new_handler,
-            seed,
-            len(seed) if seed is not None else 0,
+            c_char_p(seed),
+            c_int32(len(seed) if seed is not None else 0),
             byref(c_instance),
         )
 
@@ -218,7 +221,10 @@ class MultiSignature(BlsEntity):
 
         c_instance = c_void_p()
         do_call(
-            cls.new_handler, signature_c_instances, len(signatures), byref(c_instance)
+            cls.new_handler,
+            signature_c_instances,
+            c_int32(len(signatures)),
+            byref(c_instance),
         )
 
         res = cls(c_instance)
@@ -244,8 +250,8 @@ class Bls:
         c_instance = c_void_p()
         do_call(
             "indy_bls_sign",
-            message,
-            len(message),
+            c_char_p(message),
+            c_int64(len(message)),
             sign_key.c_instance,
             byref(c_instance),
         )
@@ -278,8 +284,8 @@ class Bls:
         do_call(
             "indy_bls_verify",
             signature.c_instance,
-            message,
-            len(message),
+            c_char_p(message),
+            c_int64(len(message)),
             ver_key.c_instance,
             gen.c_instance,
             byref(valid),
@@ -347,10 +353,10 @@ class Bls:
         do_call(
             "indy_bls_verify_multi_sig",
             multi_sig.c_instance,
-            message,
-            len(message),
+            c_char_p(message),
+            c_int64(len(message)),
             ver_key_c_instances,
-            len(ver_keys),
+            c_int32(len(ver_keys)),
             gen.c_instance,
             byref(valid),
         )
