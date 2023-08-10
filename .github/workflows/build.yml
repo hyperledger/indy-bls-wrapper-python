@@ -89,11 +89,11 @@ jobs:
         run: |
           if [ -n "${{ matrix.use_cross }}" ]; then
             cargo install --bins --git https://github.com/rust-embedded/cross --tag v${{ env.CROSS_VERSION }} cross
-            cross build --lib --release --target ${{ matrix.target }}
+            cross build --lib --release --features ffi --target ${{ matrix.target }}
           elif [ "${{ matrix.architecture }}" == "darwin-universal" ]; then
             ../build-universal.sh
           else
-            cargo build --lib --release --target ${{ matrix.target }}
+            cargo build --lib --release --features ffi --target ${{ matrix.target }}
           fi
           cp "target/${{ matrix.target }}/release/${{ matrix.lib }}" ../
 
