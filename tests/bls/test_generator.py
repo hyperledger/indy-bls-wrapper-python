@@ -1,4 +1,4 @@
-from ursa.bls import Generator
+from indy_bls import Generator
 
 
 def test_new(generator):

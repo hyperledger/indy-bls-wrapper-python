@@ -1,4 +1,9 @@
-from ursa.bls import Bls, Generator, SignKey, VerKey, ProofOfPossession, Signature, MultiSignature
+from indy_bls import (
+    Bls,
+    SignKey,
+    VerKey,
+    MultiSignature,
+)
 
 
 def test_sign(signature1):
@@ -40,5 +45,7 @@ def test_verify_multi_sig_works_for_invalid_signature(generator, message):
     signature2 = Bls.sign(message, sign_key2)
     multi_signature_invalid = MultiSignature.new([signature1, signature2])
 
-    valid = Bls.verify_multi_sig(multi_signature_invalid, message, [ver_key1, ver_key2], generator)
+    valid = Bls.verify_multi_sig(
+        multi_signature_invalid, message, [ver_key1, ver_key2], generator
+    )
     assert not valid

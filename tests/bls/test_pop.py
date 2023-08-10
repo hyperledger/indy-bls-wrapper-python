@@ -1,4 +1,4 @@
-from ursa.bls import ProofOfPossession
+from indy_bls import ProofOfPossession
 
 
 def test_new(pop):

@@ -1,4 +1,4 @@
-from ursa.bls import SignKey
+from indy_bls import SignKey
 
 
 def test_new(sign_key1):

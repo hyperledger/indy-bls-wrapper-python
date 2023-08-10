@@ -1,4 +1,4 @@
-from ursa.bls import MultiSignature
+from indy_bls import MultiSignature
 
 
 def test_new(multi_sig):

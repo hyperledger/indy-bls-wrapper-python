@@ -1,4 +1,4 @@
-from ursa.bls import VerKey
+from indy_bls import VerKey
 
 
 def test_new(ver_key1):
