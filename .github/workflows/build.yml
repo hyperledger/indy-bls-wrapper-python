@@ -1,0 +1,139 @@
+name: "indy_bls"
+
+env:
+  RUST_VERSION: "1.65.0"
+  CROSS_VERSION: "0.2.4"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  release:
+    types: [created]
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: "Publish to Registries"
+        required: true
+        default: false
+        type: boolean
+
+jobs:
+  build-release:
+    name: Build library
+
+    strategy:
+      matrix:
+        python-version: ["3.8"]
+        include:
+          - architecture: linux-aarch64
+            os: ubuntu-latest
+            lib: libindy_blssignatures.so
+            plat-name: manylinux2014_aarch64
+            target: aarch64-unknown-linux-gnu
+            use_cross: true
+          - architecture: linux-x86_64
+            os: ubuntu-latest
+            lib: libindy_blssignatures.so
+            plat-name: manylinux2014_x86_64
+            target: x86_64-unknown-linux-gnu
+            use_cross: true
+          #   - architecture: darwin-universal
+          #     os: macos-latest
+          #     lib: libindy_blssignatures.dylib
+          #     plat-name: macosx_10_9_universal2
+          #     target: darwin-universal
+          #     # beta or nightly required for aarch64-apple-darwin target
+          #     toolchain: beta
+          - architecture: windows-x86_64
+            os: windows-latest
+            lib: indy_blssignatures.dll
+            plat-name: win_amd64
+            target: x86_64-pc-windows-msvc
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install setuptools wheel twine auditwheel
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.toolchain || env.RUST_VERSION }}
+
+      - name: Checkout library
+        uses: actions/checkout@v3
+        with:
+          repository: "andrewwwhitehead/indy-blssignatures-rs"
+          ref: "upd/bls"
+          path: "build"
+
+      - name: Build
+        shell: sh
+        working-directory: build
+        run: |
+          if [ -n "${{ matrix.use_cross }}" ]; then
+            cargo install --bins --git https://github.com/rust-embedded/cross --tag v${{ env.CROSS_VERSION }} cross
+            cross build --lib --release --target ${{ matrix.target }}
+          elif [ "${{ matrix.architecture }}" == "darwin-universal" ]; then
+            ../build-universal.sh
+          else
+            cargo build --lib --release --target ${{ matrix.target }}
+          fi
+          cp "target/release/${{ matrix.lib }}" ../
+
+      - name: Build wheel package
+        shell: sh
+        run: |
+          python setup.py bdist_wheel --python-tag=py3 --plat-name=${{ matrix.plat-name }}
+
+      - name: Run tests
+        # FIXME cross platform test the python package
+        # maybe use the cross docker image?
+        if: ${{ matrix.architecture != 'linux-aarch64' }}
+        shell: sh
+        run: |
+          pip install pytest dist/*
+          echo "-- Test SQLite in-memory --"
+          python -m pytest --log-cli-level=WARNING -k "not contention"
+          echo "-- Test SQLite file DB --"
+          TEST_STORE_URI=sqlite://test.db python -m pytest --log-cli-level=WARNING -k "not contention"
+          if [ -n "$POSTGRES_URL" ]; then
+            echo "-- Test Postgres DB --"
+            TEST_STORE_URI="$POSTGRES_URL" python -m pytest --log-cli-level=WARNING -k "not contention"
+          fi
+        working-directory: wrappers/python
+        env:
+          no_proxy: "*" # python issue 30385
+          RUST_BACKTRACE: full
+
+      - if: ${{ runner.os == 'Linux' }}
+        name: Audit wheel
+        run: |
+          auditwheel show wrappers/python/dist/* | tee auditwheel.log
+          grep -q manylinux_2_17_ auditwheel.log
+
+      - if: |
+          github.event_name == 'release' ||
+          (github.event_name == 'workflow_dispatch' && github.event.inputs.publish == 'true')
+        name: Publish
+        env:
+          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+        run: |
+          twine upload --skip-existing dist/*
