@@ -1,4 +1,4 @@
-from ursa.bls import Signature
+from indy_bls import Signature
 
 
 def test_new(signature1):

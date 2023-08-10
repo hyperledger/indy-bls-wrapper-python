@@ -1,12 +1,20 @@
 import logging
+
 from ctypes import POINTER, c_void_p, byref, c_size_t, c_ubyte, c_bool
+from weakref import finalize
+
 from .lib import do_call
+
+
+def _free(method, value):
+    do_call(method, value)
 
 
 class BlsEntity:
     """
     Base class for BLS Entities (Generator, SignKey, VerKey, Signature, MultiSignature).
     """
+
     new_handler = None
     from_bytes_handler = None
     as_bytes_handler = None
@@ -17,6 +25,7 @@ class BlsEntity:
         logger.debug("BlsEntity.__init__: >>> self: %r, instance: %r", self, c_instance)
 
         self.c_instance = c_instance
+        finalize(self, _free, self.free_handler, c_instance)
 
     @classmethod
     def from_bytes(cls, xbytes):
@@ -47,17 +56,13 @@ class BlsEntity:
         xbytes = POINTER(c_ubyte)()
         xbytes_len = c_size_t()
 
-        do_call(self.as_bytes_handler, self.c_instance, byref(xbytes), byref(xbytes_len))
-        res = bytes(xbytes[:xbytes_len.value])
+        do_call(
+            self.as_bytes_handler, self.c_instance, byref(xbytes), byref(xbytes_len)
+        )
+        res = bytes(xbytes[: xbytes_len.value])
 
         logger.debug("BlsEntity.as_bytes: <<< res: %r", res)
         return res
-
-    def __del__(self):
-        logger = logging.getLogger(__name__)
-        logger.debug("BlsEntity.__del__: >>> self: %r", self)
-
-        do_call(self.free_handler, self.c_instance)
 
 
 class Generator(BlsEntity):
@@ -66,10 +71,11 @@ class Generator(BlsEntity):
     BLS algorithm requires choosing of generator point that must be known to all parties.
     The most of BLS methods require generator to be provided.
     """
-    new_handler = 'ursa_bls_generator_new'
-    from_bytes_handler = 'ursa_bls_generator_from_bytes'
-    as_bytes_handler = 'ursa_bls_generator_as_bytes'
-    free_handler = 'ursa_bls_generator_free'
+
+    new_handler = "indy_bls_generator_new"
+    from_bytes_handler = "indy_bls_generator_from_bytes"
+    as_bytes_handler = "indy_bls_generator_as_bytes"
+    free_handler = "indy_bls_generator_free"
 
     @classmethod
     def new(cls):
@@ -93,10 +99,11 @@ class SignKey(BlsEntity):
     """
     BLS sign key.
     """
-    new_handler = 'ursa_bls_sign_key_new'
-    from_bytes_handler = 'ursa_bls_sign_key_from_bytes'
-    as_bytes_handler = 'ursa_bls_sign_key_as_bytes'
-    free_handler = 'ursa_bls_sign_key_free'
+
+    new_handler = "indy_bls_sign_key_new"
+    from_bytes_handler = "indy_bls_sign_key_from_bytes"
+    as_bytes_handler = "indy_bls_sign_key_as_bytes"
+    free_handler = "indy_bls_sign_key_free"
 
     @classmethod
     def new(cls, seed):
@@ -109,7 +116,12 @@ class SignKey(BlsEntity):
         logger.debug("SignKey::new: >>>")
 
         c_instance = c_void_p()
-        do_call(cls.new_handler, seed, len(seed) if seed is not None else 0, byref(c_instance))
+        do_call(
+            cls.new_handler,
+            seed,
+            len(seed) if seed is not None else 0,
+            byref(c_instance),
+        )
 
         res = cls(c_instance)
 
@@ -121,10 +133,11 @@ class VerKey(BlsEntity):
     """
     BLS verification key.
     """
-    new_handler = 'ursa_bls_ver_key_new'
-    from_bytes_handler = 'ursa_bls_ver_key_from_bytes'
-    as_bytes_handler = 'ursa_bls_ver_key_as_bytes'
-    free_handler = 'ursa_bls_ver_key_free'
+
+    new_handler = "indy_bls_ver_key_new"
+    from_bytes_handler = "indy_bls_ver_key_from_bytes"
+    as_bytes_handler = "indy_bls_ver_key_as_bytes"
+    free_handler = "indy_bls_ver_key_free"
 
     @classmethod
     def new(cls, gen, sign_key):
@@ -150,10 +163,11 @@ class ProofOfPossession(BlsEntity):
     """
     BLS proof of possession.
     """
-    new_handler = 'ursa_bls_pop_new'
-    from_bytes_handler = 'ursa_bls_pop_from_bytes'
-    as_bytes_handler = 'ursa_bls_pop_as_bytes'
-    free_handler = 'ursa_bls_pop_free'
+
+    new_handler = "indy_bls_pop_new"
+    from_bytes_handler = "indy_bls_pop_from_bytes"
+    as_bytes_handler = "indy_bls_pop_as_bytes"
+    free_handler = "indy_bls_pop_free"
 
     @classmethod
     def new(cls, ver_key, sign_key):
@@ -167,7 +181,9 @@ class ProofOfPossession(BlsEntity):
         logger.debug("ProofOfPossession::new: >>>")
 
         c_instance = c_void_p()
-        do_call(cls.new_handler, ver_key.c_instance, sign_key.c_instance, byref(c_instance))
+        do_call(
+            cls.new_handler, ver_key.c_instance, sign_key.c_instance, byref(c_instance)
+        )
 
         res = cls(c_instance)
 
@@ -179,20 +195,22 @@ class Signature(BlsEntity):
     """
     BLS signature.
     """
+
     new_handler = None
-    from_bytes_handler = 'ursa_bls_signature_from_bytes'
-    as_bytes_handler = 'ursa_bls_signature_as_bytes'
-    free_handler = 'ursa_bls_signature_free'
+    from_bytes_handler = "indy_bls_signature_from_bytes"
+    as_bytes_handler = "indy_bls_signature_as_bytes"
+    free_handler = "indy_bls_signature_free"
 
 
 class MultiSignature(BlsEntity):
     """
     BLS multi signature.
     """
-    new_handler = 'ursa_bls_multi_signature_new'
-    from_bytes_handler = 'ursa_bls_multi_signature_from_bytes'
-    as_bytes_handler = 'ursa_bls_multi_signature_as_bytes'
-    free_handler = 'ursa_bls_multi_signature_free'
+
+    new_handler = "indy_bls_multi_signature_new"
+    from_bytes_handler = "indy_bls_multi_signature_from_bytes"
+    as_bytes_handler = "indy_bls_multi_signature_as_bytes"
+    free_handler = "indy_bls_multi_signature_free"
 
     @classmethod
     def new(cls, signatures):
@@ -210,7 +228,9 @@ class MultiSignature(BlsEntity):
             signature_c_instances[i] = signatures[i].c_instance
 
         c_instance = c_void_p()
-        do_call(cls.new_handler, signature_c_instances, len(signatures), byref(c_instance))
+        do_call(
+            cls.new_handler, signature_c_instances, len(signatures), byref(c_instance)
+        )
 
         res = cls(c_instance)
 
@@ -236,10 +256,13 @@ class Bls:
         logger.debug("Bls::sign: >>> message: %r, sign_key: %r", message, sign_key)
 
         c_instance = c_void_p()
-        do_call('ursa_bls_sign',
-                message, len(message),
-                sign_key.c_instance,
-                byref(c_instance))
+        do_call(
+            "indy_bls_sign",
+            message,
+            len(message),
+            sign_key.c_instance,
+            byref(c_instance),
+        )
 
         res = Signature(c_instance)
 
@@ -258,16 +281,24 @@ class Bls:
         """
 
         logger = logging.getLogger(__name__)
-        logger.debug("Bls::verify: >>> signature: %r, message: %r, ver_key: %r, gen: %r", signature, message, ver_key,
-                     gen)
+        logger.debug(
+            "Bls::verify: >>> signature: %r, message: %r, ver_key: %r, gen: %r",
+            signature,
+            message,
+            ver_key,
+            gen,
+        )
 
         valid = c_bool()
-        do_call('ursa_bls_verify',
-                signature.c_instance,
-                message, len(message),
-                ver_key.c_instance,
-                gen.c_instance,
-                byref(valid))
+        do_call(
+            "indy_bls_verify",
+            signature.c_instance,
+            message,
+            len(message),
+            ver_key.c_instance,
+            gen.c_instance,
+            byref(valid),
+        )
 
         res = valid
         logger.debug("Bls::verify: <<< res: %r", res)
@@ -284,17 +315,18 @@ class Bls:
         """
 
         logger = logging.getLogger(__name__)
-        logger.debug("Bls::verify_pop: >>> pop: %r, ver_key: %r, gen: %r",
-                     pop,
-                     ver_key,
-                     gen)
+        logger.debug(
+            "Bls::verify_pop: >>> pop: %r, ver_key: %r, gen: %r", pop, ver_key, gen
+        )
 
         valid = c_bool()
-        do_call('ursa_bls_verify_pop',
-                pop.c_instance,
-                ver_key.c_instance,
-                gen.c_instance,
-                byref(valid))
+        do_call(
+            "indy_bls_verify_pop",
+            pop.c_instance,
+            ver_key.c_instance,
+            gen.c_instance,
+            byref(valid),
+        )
 
         res = valid
         logger.debug("Bls::verify_pop: <<< res: %r", res)
@@ -312,8 +344,13 @@ class Bls:
         """
 
         logger = logging.getLogger(__name__)
-        logger.debug("Bls::verify_multi_sig: >>> multi_sig: %r, message: %r, ver_keys: %r, gen: %r",
-                     multi_sig, message, ver_keys, gen)
+        logger.debug(
+            "Bls::verify_multi_sig: >>> multi_sig: %r, message: %r, ver_keys: %r, gen: %r",
+            multi_sig,
+            message,
+            ver_keys,
+            gen,
+        )
 
         # noinspection PyCallingNonCallable,PyTypeChecker
         ver_key_c_instances = (c_void_p * len(ver_keys))()
@@ -321,12 +358,16 @@ class Bls:
             ver_key_c_instances[i] = ver_keys[i].c_instance
 
         valid = c_bool()
-        do_call('ursa_bls_verify_multi_sig',
-                multi_sig.c_instance,
-                message, len(message),
-                ver_key_c_instances, len(ver_keys),
-                gen.c_instance,
-                byref(valid))
+        do_call(
+            "indy_bls_verify_multi_sig",
+            multi_sig.c_instance,
+            message,
+            len(message),
+            ver_key_c_instances,
+            len(ver_keys),
+            gen.c_instance,
+            byref(valid),
+        )
 
         res = valid
 

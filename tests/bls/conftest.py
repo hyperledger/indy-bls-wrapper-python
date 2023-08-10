@@ -1,4 +1,12 @@
-from ursa.bls import Bls, Generator, SignKey, VerKey, ProofOfPossession, Signature, MultiSignature
+from indy_bls import (
+    Bls,
+    Generator,
+    SignKey,
+    VerKey,
+    ProofOfPossession,
+    Signature,
+    MultiSignature,
+)
 
 import pytest
 
@@ -23,9 +31,42 @@ def sign_key1():
 
 @pytest.fixture
 def sign_key2():
-    seed = bytes([1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-                  11, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-                  21, 2, 3, 4, 5, 6, 7, 8, 9, 10, 31, 32])
+    seed = bytes(
+        [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            21,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            31,
+            32,
+        ]
+    )
     sign_key = SignKey.new(seed)
 
     assert type(sign_key) is SignKey
