@@ -87,6 +87,7 @@ jobs:
         shell: sh
         working-directory: build
         run: |
+          cp ../ci/Cross.toml .
           if [ -n "${{ matrix.use_cross }}" ]; then
             cargo install --bins --git https://github.com/rust-embedded/cross --tag v${{ env.CROSS_VERSION }} cross
             cross build --lib --release --features ffi --target ${{ matrix.target }}
