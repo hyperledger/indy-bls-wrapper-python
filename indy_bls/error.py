@@ -1,10 +1,5 @@
-from enum import IntEnum
-
-
-class ErrorCode(IntEnum):
-    Success = 0
-    Fail = 1
+"""Error classes."""
 
 
 class IndyBlsError(Exception):
-    pass
+    """Base class for library errors."""

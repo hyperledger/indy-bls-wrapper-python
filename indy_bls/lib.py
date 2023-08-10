@@ -1,3 +1,5 @@
+"""Raw library bindings."""
+
 import json
 import os.path
 import logging
@@ -5,23 +7,31 @@ import sys
 
 from ctypes import CDLL, CFUNCTYPE, byref, c_char_p, c_int32, c_void_p
 from ctypes.util import find_library
+from enum import IntEnum
 from logging import ERROR, WARNING, INFO, DEBUG
 
-from .error import ErrorCode, IndyBlsError
+from .error import IndyBlsError
 
 LOGGER = logging.getLogger()
 TRACE = 5
 
 
+class ErrorCode(IntEnum):
+    """Error code as returned by FFI methods."""
+
+    Success = 0
+    Fail = 1
+
+
 def do_call(name, *args):
-    logger = logging.getLogger(__name__)
-    # logger.debug("do_call: >>> name: %r, args: %r", name, args)
+    """Perform an FFI method call."""
+    # LOGGER.debug("do_call: >>> name: %r, args: %r", name, args)
 
     lib = _cdll()
     err = getattr(lib, name)(*args)
 
     if err != ErrorCode.Success:
-        logger.debug("do_call: Function %r returned err: %r", name, err)
+        LOGGER.debug("do_call: Function %r returned err: %r", name, err)
         err_msg = c_char_p()
         lib.indy_bls_get_current_error(byref(err_msg))
         err_json = err_msg.value.decode("utf-8")
@@ -38,8 +48,7 @@ def _cdll():
 
 
 def _load_cdll() -> CDLL:
-    logger = logging.getLogger(__name__)
-    logger.debug("_load_cdll: >>>")
+    LOGGER.debug("_load_cdll: >>>")
 
     lib_name = "indy_blssignatures"
     lib_prefix_mapping = {"darwin": "lib", "linux": "lib", "linux2": "lib", "win32": ""}
@@ -51,22 +60,22 @@ def _load_cdll() -> CDLL:
     }
 
     os_name = sys.platform
-    logger.debug("_load_cdll: Detected OS name: %s", os_name)
+    LOGGER.debug("_load_cdll: Detected OS name: %s", os_name)
 
     try:
         lib_prefix = lib_prefix_mapping[os_name]
         lib_suffix = lib_suffix_mapping[os_name]
     except KeyError:
-        logger.error("_load_cdll: OS isn't supported: %s", os_name)
-        raise OSError("OS isn't supported: %s", os_name)
+        LOGGER.error("_load_cdll: OS isn't supported: %s", os_name)
+        raise IndyBlsError("OS isn't supported: %s", os_name)
 
     lib_filename = f"{lib_prefix}{lib_name}{lib_suffix}"
-    logger.debug("_load_cdll: Resolved library name is: %s", lib_filename)
+    LOGGER.debug("_load_cdll: Resolved library name is: %s", lib_filename)
 
     try:
         lib_path = os.path.join(os.path.dirname(__file__), "..", lib_filename)
         res = CDLL(lib_path)
-        logger.debug("_load_cdll: <<< res: %s", res)
+        LOGGER.debug("_load_cdll: <<< res: %s", res)
         return res
     except OSError:
         LOGGER.warning("Library not loaded from python package")
@@ -77,20 +86,19 @@ def _load_cdll() -> CDLL:
     try:
         res = CDLL(lib_path)
     except OSError as e:
-        logger.error("_load_cdll: Can't load %s: %s", lib_name, e)
+        LOGGER.error("_load_cdll: Can't load %s: %s", lib_name, e)
         raise IndyBlsError(f"Error loading library: {lib_path}") from e
 
     return res
 
 
 def _set_logger():
-    logger = logging.getLogger(__name__)
     logging.addLevelName(TRACE, "TRACE")
 
-    logger.debug("set_logger: >>>")
+    LOGGER.debug("set_logger: >>>")
 
     def _log(context, level, target, message, module_path, file, line):
-        lib_logger = logger.getChild("native." + target.decode().replace("::", "."))
+        lib_logger = LOGGER.getChild("native." + target.decode().replace("::", "."))
 
         level_mapping = {
             1: ERROR,
@@ -121,4 +129,4 @@ def _set_logger():
         c_int32(TRACE),
     )
 
-    logger.debug("set_logger: <<<")
+    LOGGER.debug("set_logger: <<<")

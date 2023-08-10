@@ -1,3 +1,5 @@
+"""Indy BLS signature support."""
+
 from .bls import (
     Bls,
     Generator,
