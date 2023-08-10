@@ -1,3 +1,5 @@
+"""Public interface."""
+
 import logging
 
 from ctypes import POINTER, c_void_p, byref, c_size_t, c_ubyte, c_bool
@@ -5,15 +7,15 @@ from weakref import finalize
 
 from .lib import do_call
 
+LOGGER = logging.getLogger(__name__)
+
 
 def _free(method, value):
     do_call(method, value)
 
 
 class BlsEntity:
-    """
-    Base class for BLS Entities (Generator, SignKey, VerKey, Signature, MultiSignature).
-    """
+    """Base class for BLS Entities."""
 
     new_handler = None
     from_bytes_handler = None
@@ -21,8 +23,8 @@ class BlsEntity:
     free_handler = None
 
     def __init__(self, c_instance):
-        logger = logging.getLogger(__name__)
-        logger.debug("BlsEntity.__init__: >>> self: %r, instance: %r", self, c_instance)
+        """Initializer."""
+        LOGGER.debug("BlsEntity.__init__: >>> self: %r, instance: %r", self, c_instance)
 
         self.c_instance = c_instance
         finalize(self, _free, self.free_handler, c_instance)
@@ -30,28 +32,28 @@ class BlsEntity:
     @classmethod
     def from_bytes(cls, xbytes):
         """
-        Creates and Bls entity from bytes representation.
+        Create a BLS entity from the binary representation.
+
         :param xbytes: Bytes representation of Bls entity
         :return: BLS entity intance
         """
-        logger = logging.getLogger(__name__)
-        logger.debug("BlsEntity::from_bytes: >>>")
+        LOGGER.debug("BlsEntity::from_bytes: >>>")
 
         c_instance = c_void_p()
         do_call(cls.from_bytes_handler, xbytes, len(xbytes), byref(c_instance))
 
         res = cls(c_instance)
 
-        logger.debug("BlsEntity::from_bytes: <<< res: %r", res)
+        LOGGER.debug("BlsEntity::from_bytes: <<< res: %r", res)
         return res
 
     def as_bytes(self):
         """
-        Returns BLS entity bytes representation.
+        Return the BLS entity bytes representation.
+
         :return: BLS entity bytes representation
         """
-        logger = logging.getLogger(__name__)
-        logger.debug("BlsEntity.as_bytes: >>> self: %r", self)
+        LOGGER.debug("BlsEntity.as_bytes: >>> self: %r", self)
 
         xbytes = POINTER(c_ubyte)()
         xbytes_len = c_size_t()
@@ -61,15 +63,16 @@ class BlsEntity:
         )
         res = bytes(xbytes[: xbytes_len.value])
 
-        logger.debug("BlsEntity.as_bytes: <<< res: %r", res)
+        LOGGER.debug("BlsEntity.as_bytes: <<< res: %r", res)
         return res
 
 
 class Generator(BlsEntity):
     """
     BLS generator point.
-    BLS algorithm requires choosing of generator point that must be known to all parties.
-    The most of BLS methods require generator to be provided.
+
+    The BLS algorithm requires choosing of generator point that must be known to
+    all parties. Most methods require the generator to be provided.
     """
 
     new_handler = "indy_bls_generator_new"
@@ -79,26 +82,20 @@ class Generator(BlsEntity):
 
     @classmethod
     def new(cls):
-        """
-        Creates and returns random generator point that satisfy BLS algorithm requirements.
-        :return: BLS generator
-        """
-        logger = logging.getLogger(__name__)
-        logger.debug("Generator::new: >>>")
+        """Create and return a random generator point."""
+        LOGGER.debug("Generator::new: >>>")
 
         c_instance = c_void_p()
         do_call(cls.new_handler, byref(c_instance))
 
         res = cls(c_instance)
 
-        logger.debug("Generator::new: <<< res: %r", res)
+        LOGGER.debug("Generator::new: <<< res: %r", res)
         return res
 
 
 class SignKey(BlsEntity):
-    """
-    BLS sign key.
-    """
+    """BLS signing key."""
 
     new_handler = "indy_bls_sign_key_new"
     from_bytes_handler = "indy_bls_sign_key_from_bytes"
@@ -108,12 +105,12 @@ class SignKey(BlsEntity):
     @classmethod
     def new(cls, seed):
         """
-        Creates and returns random (or seeded from seed) BLS sign key.
+        Create and return a random (or seeded from seed) BLS sign key.
+
         :param: seed - Optional seed.
         :return: BLS sign key
         """
-        logger = logging.getLogger(__name__)
-        logger.debug("SignKey::new: >>>")
+        LOGGER.debug("SignKey::new: >>>")
 
         c_instance = c_void_p()
         do_call(
@@ -125,14 +122,12 @@ class SignKey(BlsEntity):
 
         res = cls(c_instance)
 
-        logger.debug("SignKey::new: <<< res: %r", res)
+        LOGGER.debug("SignKey::new: <<< res: %r", res)
         return res
 
 
 class VerKey(BlsEntity):
-    """
-    BLS verification key.
-    """
+    """BLS verification key."""
 
     new_handler = "indy_bls_ver_key_new"
     from_bytes_handler = "indy_bls_ver_key_from_bytes"
@@ -142,27 +137,25 @@ class VerKey(BlsEntity):
     @classmethod
     def new(cls, gen, sign_key):
         """
-        Creates and returns BLS ver key that corresponds to the given generator and sign key.
+        Create and return a BLS verification.
+
         :param: gen - Generator
         :param: sign_key - Sign Key
         :return: BLS verification key
         """
-        logger = logging.getLogger(__name__)
-        logger.debug("VerKey::new: >>>")
+        LOGGER.debug("VerKey::new: >>>")
 
         c_instance = c_void_p()
         do_call(cls.new_handler, gen.c_instance, sign_key.c_instance, byref(c_instance))
 
         res = cls(c_instance)
 
-        logger.debug("VerKey::new: <<< res: %r", res)
+        LOGGER.debug("VerKey::new: <<< res: %r", res)
         return res
 
 
 class ProofOfPossession(BlsEntity):
-    """
-    BLS proof of possession.
-    """
+    """BLS proof of possession."""
 
     new_handler = "indy_bls_pop_new"
     from_bytes_handler = "indy_bls_pop_from_bytes"
@@ -172,13 +165,13 @@ class ProofOfPossession(BlsEntity):
     @classmethod
     def new(cls, ver_key, sign_key):
         """
-        Creates and returns BLS proof of possession that corresponds to the given ver key and sign key.
+        Create and return a BLS proof of possession.
+
         :param: ver_key - Ver Key
         :param: sign_key - Sign Key
         :return: BLS proof of possession
         """
-        logger = logging.getLogger(__name__)
-        logger.debug("ProofOfPossession::new: >>>")
+        LOGGER.debug("ProofOfPossession::new: >>>")
 
         c_instance = c_void_p()
         do_call(
@@ -187,14 +180,12 @@ class ProofOfPossession(BlsEntity):
 
         res = cls(c_instance)
 
-        logger.debug("ProofOfPossession::new: <<< res: %r", res)
+        LOGGER.debug("ProofOfPossession::new: <<< res: %r", res)
         return res
 
 
 class Signature(BlsEntity):
-    """
-    BLS signature.
-    """
+    """BLS signature."""
 
     new_handler = None
     from_bytes_handler = "indy_bls_signature_from_bytes"
@@ -203,9 +194,7 @@ class Signature(BlsEntity):
 
 
 class MultiSignature(BlsEntity):
-    """
-    BLS multi signature.
-    """
+    """BLS multi signature."""
 
     new_handler = "indy_bls_multi_signature_new"
     from_bytes_handler = "indy_bls_multi_signature_from_bytes"
@@ -215,12 +204,12 @@ class MultiSignature(BlsEntity):
     @classmethod
     def new(cls, signatures):
         """
-        Creates and returns BLS multi signature that corresponds to the given signatures list.
+        Create and return a BLS multi signature.
+
         :param: signature - List of signatures
         :return: BLS multi signature
         """
-        logger = logging.getLogger(__name__)
-        logger.debug("MultiSignature::new: >>>")
+        LOGGER.debug("MultiSignature::new: >>>")
 
         # noinspection PyCallingNonCallable,PyTypeChecker
         signature_c_instances = (c_void_p * len(signatures))()
@@ -234,26 +223,23 @@ class MultiSignature(BlsEntity):
 
         res = cls(c_instance)
 
-        logger.debug("MultiSignature::new: <<< res: %r", res)
+        LOGGER.debug("MultiSignature::new: <<< res: %r", res)
         return res
 
 
 class Bls:
-    """
-    Provides Bls methods.
-    """
+    """Provides BLS methods."""
 
     @staticmethod
     def sign(message, sign_key):
         """
-        Signs the message and returns signature.
+        Sign the message and return the signature.
+
         :param: message - Message to sign
         :param: sign_key - Sign key
         :return: Signature
         """
-
-        logger = logging.getLogger(__name__)
-        logger.debug("Bls::sign: >>> message: %r, sign_key: %r", message, sign_key)
+        LOGGER.debug("Bls::sign: >>> message: %r, sign_key: %r", message, sign_key)
 
         c_instance = c_void_p()
         do_call(
@@ -266,22 +252,21 @@ class Bls:
 
         res = Signature(c_instance)
 
-        logger.debug("Bls::sign: <<< res: %r", res)
+        LOGGER.debug("Bls::sign: <<< res: %r", res)
         return res
 
     @staticmethod
     def verify(signature, message, ver_key, gen):
         """
-        Verifies the message signature and returns true - if signature valid or false otherwise.
+        Verify the message signature.
+
         :param: signature - Signature to verify
         :param: message - Message to verify
         :param: ver_key - Verification key
         :param: gen - Generator point
-        :return: true if signature valid
+        :return: true if the signature is valid, false otherwise
         """
-
-        logger = logging.getLogger(__name__)
-        logger.debug(
+        LOGGER.debug(
             "Bls::verify: >>> signature: %r, message: %r, ver_key: %r, gen: %r",
             signature,
             message,
@@ -301,21 +286,20 @@ class Bls:
         )
 
         res = valid
-        logger.debug("Bls::verify: <<< res: %r", res)
+        LOGGER.debug("Bls::verify: <<< res: %r", res)
         return res
 
     @staticmethod
     def verify_pop(pop, ver_key, gen):
         """
-        Verifies the proof of possession and returns true - if signature valid or false otherwise.
+        Verifiy the proof of possession.
+
         :param: pop - Proof of possession
         :param: ver_key - Verification key
         :param: gen - Generator point
-        :return: true if signature valid
+        :return: true if the signature is valid, false otherwise
         """
-
-        logger = logging.getLogger(__name__)
-        logger.debug(
+        LOGGER.debug(
             "Bls::verify_pop: >>> pop: %r, ver_key: %r, gen: %r", pop, ver_key, gen
         )
 
@@ -329,23 +313,25 @@ class Bls:
         )
 
         res = valid
-        logger.debug("Bls::verify_pop: <<< res: %r", res)
+        LOGGER.debug("Bls::verify_pop: <<< res: %r", res)
         return res
 
     @staticmethod
     def verify_multi_sig(multi_sig, message, ver_keys, gen):
         """
-        Verifies the message multi signature and returns true - if signature valid or false otherwise.
-        :param: multi_sig - Multi signature to verify
+        Verifiy the message multi signature.
+
+                :param: multi_sig - Multi signature to verify
         :param: message - Message to verify
         :param: ver_keys - List of verification keys
         :param: gen - Generator point
-        :return: true if multi signature valid.
+        :return: true if the multi signature is valid, false otherwise
         """
-
-        logger = logging.getLogger(__name__)
-        logger.debug(
-            "Bls::verify_multi_sig: >>> multi_sig: %r, message: %r, ver_keys: %r, gen: %r",
+        LOGGER.debug(
+            (
+                "Bls::verify_multi_sig: >>> multi_sig: %r, message: %r, "
+                "ver_keys: %r, gen: %r"
+            ),
             multi_sig,
             message,
             ver_keys,
@@ -371,5 +357,5 @@ class Bls:
 
         res = valid
 
-        logger.debug("Bls::verify_multi_sig: <<< res: %r", res)
+        LOGGER.debug("Bls::verify_multi_sig: <<< res: %r", res)
         return res
