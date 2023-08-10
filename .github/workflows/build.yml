@@ -95,7 +95,7 @@ jobs:
           else
             cargo build --lib --release --target ${{ matrix.target }}
           fi
-          cp "target/release/${{ matrix.lib }}" ../
+          cp "target/${{ matrix.target }}/release/${{ matrix.lib }}" ../
 
       - name: Build wheel package
         shell: sh
