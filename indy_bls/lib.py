@@ -73,7 +73,7 @@ def _load_cdll() -> CDLL:
     LOGGER.debug("_load_cdll: Resolved library name is: %s", lib_filename)
 
     try:
-        lib_path = os.path.join(os.path.dirname(__file__), "..", lib_filename)
+        lib_path = os.path.join(os.path.dirname(__file__), lib_filename)
         res = CDLL(lib_path)
         LOGGER.debug("_load_cdll: <<< res: %s", res)
         return res

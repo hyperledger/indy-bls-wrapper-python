@@ -18,7 +18,7 @@ on:
   workflow_dispatch:
     inputs:
       publish:
-        description: "Publish to Registries"
+        description: "Publish to PyPI"
         required: true
         default: false
         type: boolean
@@ -28,6 +28,7 @@ jobs:
     name: Build library
 
     strategy:
+      fail-fast: false
       matrix:
         architecture: [linux-aarch64, linux-x86_64, windows-x86_64]
         python-version: ["3.8"]
