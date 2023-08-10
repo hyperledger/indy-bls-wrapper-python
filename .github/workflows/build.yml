@@ -95,7 +95,7 @@ jobs:
           else
             cargo build --lib --release --features ffi --target ${{ matrix.target }}
           fi
-          cp "target/${{ matrix.target }}/release/${{ matrix.lib }}" ../
+          cp "target/${{ matrix.target }}/release/${{ matrix.lib }}" ../indy_bls/
 
       - name: Build wheel package
         shell: sh
