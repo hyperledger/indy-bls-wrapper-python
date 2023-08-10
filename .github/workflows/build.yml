@@ -29,6 +29,7 @@ jobs:
 
     strategy:
       matrix:
+        architecture: [linux-aarch64, linux-x86_64, windows-x86_64]
         python-version: ["3.8"]
         include:
           - architecture: linux-aarch64
@@ -79,8 +80,7 @@ jobs:
       - name: Checkout library
         uses: actions/checkout@v3
         with:
-          repository: "andrewwwhitehead/indy-blssignatures-rs"
-          ref: "upd/bls"
+          repository: "hyperledger/indy-blssignatures-rs"
           path: "build"
 
       - name: Build
@@ -109,14 +109,7 @@ jobs:
         shell: sh
         run: |
           pip install pytest dist/*
-          echo "-- Test SQLite in-memory --"
-          python -m pytest --log-cli-level=WARNING -k "not contention"
-          echo "-- Test SQLite file DB --"
-          TEST_STORE_URI=sqlite://test.db python -m pytest --log-cli-level=WARNING -k "not contention"
-          if [ -n "$POSTGRES_URL" ]; then
-            echo "-- Test Postgres DB --"
-            TEST_STORE_URI="$POSTGRES_URL" python -m pytest --log-cli-level=WARNING -k "not contention"
-          fi
+          python -m pytest --log-cli-level=DEBUG
         working-directory: wrappers/python
         env:
           no_proxy: "*" # python issue 30385
@@ -127,6 +120,12 @@ jobs:
         run: |
           auditwheel show wrappers/python/dist/* | tee auditwheel.log
           grep -q manylinux_2_17_ auditwheel.log
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: python-${{ matrix.plat-name }}
+          path: dist/*
 
       - if: |
           github.event_name == 'release' ||
