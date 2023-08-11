@@ -30,7 +30,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        architecture: [linux-aarch64, linux-x86_64, windows-x86_64]
+        architecture:
+          [linux-aarch64, linux-x86_64, darwin-universal, windows-x86_64]
         python-version: ["3.8"]
         include:
           - architecture: linux-aarch64
@@ -45,13 +46,13 @@ jobs:
             plat-name: manylinux2014_x86_64
             target: x86_64-unknown-linux-gnu
             use_cross: true
-          #   - architecture: darwin-universal
-          #     os: macos-latest
-          #     lib: libindy_blssignatures.dylib
-          #     plat-name: macosx_10_9_universal2
-          #     target: darwin-universal
-          #     # beta or nightly required for aarch64-apple-darwin target
-          #     toolchain: beta
+          - architecture: darwin-universal
+            os: macos-latest
+            lib: libindy_blssignatures.dylib
+            plat-name: macosx_10_9_universal2
+            target: darwin-universal
+            # beta or nightly required for aarch64-apple-darwin target
+            toolchain: beta
           - architecture: windows-x86_64
             os: windows-latest
             lib: indy_blssignatures.dll
@@ -93,7 +94,7 @@ jobs:
             cargo install --bins --git https://github.com/rust-embedded/cross --tag v${{ env.CROSS_VERSION }} cross
             cross build --lib --release --features ffi --target ${{ matrix.target }}
           elif [ "${{ matrix.architecture }}" == "darwin-universal" ]; then
-            ../build-universal.sh
+            ../ci/build-universal.sh
           else
             cargo build --lib --release --features ffi --target ${{ matrix.target }}
           fi
