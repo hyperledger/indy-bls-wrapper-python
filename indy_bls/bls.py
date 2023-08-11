@@ -64,7 +64,7 @@ class BlsEntity:
         )
         res = bytes(xbytes[: xbytes_len.value])
 
-        LOGGER.debug("BlsEntity.as_bytes: <<< res: %r", res)
+        LOGGER.debug("BlsEntity.as_bytes: <<<")
         return res
 
 
